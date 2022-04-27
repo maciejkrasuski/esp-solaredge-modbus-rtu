@@ -15,12 +15,6 @@ ethernet:
   phy_addr: 1
   power_pin: GPIO16
 
-i2c:
-  sda: GPIO14
-  scl: GPIO15
-  scan: True
-  frequency: 100kHz
-
 logger:
   level: INFO
   baud_rate: 0
@@ -28,7 +22,6 @@ api:
 ota:
 web_server:
   port: 80
-  
   
 uart:
   rx_pin: GPIO3
