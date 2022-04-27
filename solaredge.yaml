@@ -1,0 +1,415 @@
+substitutions:
+  inverter_name: SolarEdge
+
+esphome:
+  name: wt32
+  platform: ESP32
+  board: esp-wrover-kit
+
+ethernet:
+  id: eth
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO16
+
+i2c:
+  sda: GPIO14
+  scl: GPIO15
+  scan: True
+  frequency: 100kHz
+
+logger:
+  level: INFO
+  baud_rate: 0
+api:
+ota:
+web_server:
+  port: 80
+  
+  
+uart:
+  rx_pin: GPIO3
+  tx_pin: GPIO1
+  baud_rate: 9600
+  stop_bits: 1
+  
+modbus:
+  id: modbus1
+
+modbus_controller:
+  - id: se
+    ## the Modbus device addr
+    address: 126
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 60s
+    
+sensor:
+
+  # AC Current
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Total Current
+    id: I_AC_Current
+    register_type: holding
+    address: 71
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "A"
+    icon: "mdi:alpha-a-circle-outline"
+    lambda: |-
+      return {(float)x*pow(10, id(I_AC_Frequency_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Phase A Current
+    id: I_AC_CurrentA
+    register_type: holding
+    address: 72
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "A"
+    icon: "mdi:alpha-a-circle-outline"
+    lambda: |-
+      return {(float)x*pow(10, id(I_AC_Current_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Phase B Current
+    id: I_AC_CurrentB
+    register_type: holding
+    address: 73
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "A"
+    icon: "mdi:alpha-a-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Current_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Phase C Current
+    id: I_AC_CurrentC
+    register_type: holding
+    address: 74
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "A"
+    icon: "mdi:alpha-a-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Current_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Current SF
+    id: I_AC_Current_SF
+    register_type: holding
+    address: 75
+    value_type: S_WORD
+    internal: true
+    
+  # AC Voltage
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Voltage Phase AB
+    id: I_AC_VoltageAB
+    register_type: holding
+    address: 76
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "V"
+    icon: "mdi:alpha-v-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Voltage_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Voltage Phase BC
+    id: I_AC_VoltageBC
+    register_type: holding
+    address: 77
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "V"
+    icon: "mdi:alpha-v-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Voltage_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Voltage Phase CA
+    id: I_AC_VoltageCA
+    register_type: holding
+    address: 77
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "V"
+    icon: "mdi:alpha-v-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Voltage_SF).state)};    
+
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Voltage SF
+    id: I_AC_Voltage_SF
+    register_type: holding
+    address: 82
+    value_type: S_WORD
+    internal: true
+    
+  # AC Power
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Power
+    id: I_AC_Power
+    register_type: holding
+    address: 83
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "W"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Power_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Power SF
+    id: I_AC_Power_SF
+    register_type: holding
+    address: 84
+    value_type: S_WORD
+    internal: true
+  
+
+  # Frequency
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Frequency
+    id: I_AC_Frequency
+    register_type: holding
+    address: 85
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "Hz"
+    icon: "mdi:current-ac"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Frequency_SF).state)};
+      
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Frequency SF
+    id: I_AC_Frequency_SF
+    register_type: holding
+    address: 86
+    value_type: S_WORD
+    internal: true
+    
+  # Apparent Power
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Apparent Power
+    id: I_AC_VA
+    register_type: holding
+    address: 87
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "VA"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_AC_VA_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Apparent Power SF
+    id: I_AC_VA_SF
+    register_type: holding
+    address: 88
+    value_type: S_WORD
+    internal: true
+    
+  # Reactive Power
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Reactive Power
+    id: I_AC_VAR
+    register_type: holding
+    address: 89
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "VAr"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_AC_VAR_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Reactive Power SF
+    id: I_AC_VAR_SF
+    register_type: holding
+    address: 90
+    value_type: S_WORD
+    internal: true
+    
+  # Power Factor
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Power Factor
+    id: I_AC_PF
+    register_type: holding
+    address: 91
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "%"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_AC_PF_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Power Factor SF
+    id: I_AC_PF_SF
+    register_type: holding
+    address: 92
+    value_type: S_WORD
+    internal: true
+    
+  # Energy Production
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Lifetime Energy Production
+    id: I_AC_Energy_WH
+    register_type: holding
+    address: 93
+    value_type: U_DWORD
+    accuracy_decimals: 2
+    unit_of_measurement: "kWh"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_AC_Energy_WH_SF).state)/1000};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} AC Lifetime Energy Production SF
+    id: I_AC_Energy_WH_SF
+    register_type: holding
+    address: 95
+    value_type: S_WORD
+    internal: true
+    
+  # DC Current
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Current
+    id: I_DC_Current
+    register_type: holding
+    address: 96
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "A"
+    icon: "mdi:alpha-a-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_DC_Current_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Current SF
+    id: I_DC_Current_SF
+    register_type: holding
+    address: 97
+    value_type: S_WORD
+    internal: true
+    
+  # DC Voltage
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Voltage
+    id: I_DC_Voltage
+    register_type: holding
+    address: 98
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "V"
+    icon: "mdi:alpha-v-circle-outline"
+    lambda: |-
+      return {x*pow(10, id(I_DC_Voltage_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Voltage SF
+    id: I_DC_Voltage_SF
+    register_type: holding
+    address: 99
+    value_type: S_WORD
+    internal: true
+
+  # DC Power
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Power
+    id: I_DC_Power
+    register_type: holding
+    address: 100
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "W"
+    device_class: "power"
+    lambda: |-
+      return {x*pow(10, id(I_DC_Power_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} DC Power SF
+    id: I_DC_Power_SF
+    register_type: holding
+    address: 101
+    value_type: S_WORD
+    internal: true
+    
+  # Temp Sink
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} Temp Sink
+    id: I_Temp_Sink
+    register_type: holding
+    address: 103
+    value_type: U_WORD
+    accuracy_decimals: 2
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    lambda: |-
+      return {x*pow(10, id(I_Temp_SF).state)};
+  
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} Temp Sink SF
+    id: I_Temp_SF
+    register_type: holding
+    address: 106
+    value_type: S_WORD
+    internal: true
+    
+text_sensor:
+  - platform: modbus_controller
+    modbus_controller_id: se
+    name: ${inverter_name} Status
+    id: I_Status
+    register_type: holding
+    address: 107
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus_controller::word_from_hex_str(x, 0);
+      switch (value) {
+        case 1: return std::string("Off");
+        case 2: return std::string("Sleeping (auto-shutdown) – Night mode");
+        case 3: return std::string("Grid Monitoring/wake-up");
+        case 4: return std::string("Inverter is ON and producing power");
+        case 5: return std::string("Production (curtailed)");
+        case 6: return std::string("Shutting down");
+        case 7: return std::string("Fault");
+        case 8: return std:: string("Maintenance/setup");
+        default: return std::string("Unknown");
+      }
+      return x;
